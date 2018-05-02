@@ -1,6 +1,8 @@
 const electron = require('electron')
 const { ipcMain } = require('electron')
 const fs = require('fs')
+const path = require('path')
+const { login, cpf, senha } = require(path.resolve('./private'))
 
 // Module to control application life.
 const app = electron.app
@@ -9,44 +11,80 @@ const BrowserWindow = electron.BrowserWindow
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+let pjWindow
+let pfWindow
 
 let __url
 
-ipcMain.on('url', (e, m) => {
+let primeiroPj = true
+let primeiroPf = true
+
+let cnpjsPj = []
+let cnpjsPf = []
+
+ipcMain.on('url-pj', (e, m) => {
   __url = m
-  console.log(__url)
-  e.sender.send('comp')
+  console.log('pj:', __url)
+  e.sender.send('consulta', {primeiro: primeiroPj, naPj: true, login, senha, cpf})
 })
 
-ipcMain.on('save_it', () => {
-
+ipcMain.on('url-pf', (e, m) => {
+  __url = m
+  console.log('pf:', __url)
+  e.sender.send('consulta', {primeiro: primeiroPf, naPj: false, login, senha, cpf})
 })
 
-ipcMain.on('print', () => {
+ipcMain.on('primeiro-pj', () => {
+  primeiroPj = false
+})
 
+ipcMain.on('primeiro-pf', () => {
+  primeiroPf = false
+})
+
+ipcMain.on('data_array-pj', (e, arr) => {
+  cnpjsPj = cnpjsPj.concat(arr)
+})
+
+ipcMain.on('data_array-pf', (e, arr) => {
+  cnpjsPf = cnpjsPf.concat(arr)
+})
+
+ipcMain.on('end-pj', () => {
+  pfWindow = new BrowserWindow({ width: 800, height: 600 })
+  pfWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR')
+
+  pfWindow.webContents.on('did-finish-load', () => {
+    pfWindow.webContents.executeJavaScript(fs.readFileSync('./injectionPf.js', 'utf8'))
+  })
+
+  pjWindow.close()
+})
+
+ipcMain.on('end-pf', () => {
+  console.log(cnpjsPf)
+  console.log(cnpjsPj)
+
+  pfWindow.close()
 })
 
 let createWindow = () => {
   // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+  pjWindow = new BrowserWindow({width: 800, height: 600})
 
   // and load the index.html of the app.
-  mainWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR')
+  pjWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR')
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools()
-
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.executeJavaScript(fs.readFileSync('./injection.js', 'utf8'))
+  pjWindow.webContents.on('did-finish-load', () => {
+    pjWindow.webContents.executeJavaScript(fs.readFileSync('./injectionPj.js', 'utf8'))
   })
 
   // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
+  pjWindow.on('closed', function () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    mainWindow = null
+    pjWindow = null
   })
 }
 
@@ -67,7 +105,7 @@ app.on('window-all-closed', function () {
 app.on('activate', function () {
 // On OS X it's common to re-create a window in the app when the
 // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
+  if (pjWindow === null && pfWindow === null) {
     createWindow()
   }
 })
