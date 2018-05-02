@@ -62,8 +62,32 @@ ipcMain.on('end-pj', () => {
 })
 
 ipcMain.on('end-pf', () => {
-  console.log(cnpjsPf)
-  console.log(cnpjsPj)
+  let cnpjs = cnpjsPf.concat(cnpjsPj)
+  let cnpjsTxt = fs.readFileSync('./cnpjs.txt', 'utf8').split('\r\n')
+
+  cnpjsTxt.forEach((v, i) => {
+    let str = v.split('\t')
+
+    cnpjsTxt[i] = { nome: str[0], cnpj: str[1] }
+  })
+
+  let faltaCnpjs = []
+  let faltaTxt = []
+
+  cnpjs.forEach(val => {
+    if (cnpjsTxt.filter(v => v.cnpj === val.cnpj) < 1) {
+      faltaCnpjs.push(val)
+    }
+  })
+
+  cnpjsTxt.forEach(val => {
+    if (cnpjs.filter(v => v.cnpj === val.cnpj) < 1) {
+      faltaTxt.push(val)
+    }
+  })
+
+  console.log('FALTA NA PLANILHA', faltaCnpjs)
+  console.log('FALTA NO SIARE', faltaTxt)
 
   pfWindow.close()
 })
