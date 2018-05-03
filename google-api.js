@@ -19,7 +19,7 @@ const TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs.json'
  */
 function authorize (callback) {
   // Load client secrets from a local file.
-  fs.readFile('client_secret.json', function processClientSecrets (err, content) {
+  fs.readFile('client_secret.json', (err, content) => {
     if (err) {
       console.log('Error loading client secret file: ' + err)
       return
@@ -31,7 +31,7 @@ function authorize (callback) {
     let oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUrl)
 
     // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, function (err, token) {
+    fs.readFile(TOKEN_PATH, (err, token) => {
       if (err) {
         getNewToken(oauth2Client, callback)
       } else {
@@ -64,7 +64,7 @@ function getNewToken (oauth2Client, callback) {
   })
   rl.question('Enter the code from that page here: ', function (code) {
     rl.close()
-    oauth2Client.getToken(code, function (err, token) {
+    oauth2Client.getToken(code, (err, token) => {
       if (err) {
         console.log('Error while trying to retrieve access token', err)
         return
