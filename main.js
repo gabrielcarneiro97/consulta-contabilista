@@ -3,6 +3,7 @@ const { ipcMain } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const { login, cpf, senha } = require(path.resolve('./private'))
+const { getSheet, writeSheet } = require(path.resolve('./google-api'))
 
 // Module to control application life.
 const app = electron.app
@@ -62,34 +63,58 @@ ipcMain.on('end-pj', () => {
 })
 
 ipcMain.on('end-pf', () => {
-  let cnpjs = cnpjsPf.concat(cnpjsPj)
-  let cnpjsTxt = fs.readFileSync('./cnpjs.txt', 'utf8').split('\r\n')
-
-  cnpjsTxt.forEach((v, i) => {
-    let str = v.split('\t')
-
-    cnpjsTxt[i] = { nome: str[0], cnpj: str[1] }
-  })
-
-  let faltaCnpjs = []
-  let faltaTxt = []
-
-  cnpjs.forEach(val => {
-    if (cnpjsTxt.filter(v => v.cnpj === val.cnpj) < 1) {
-      faltaCnpjs.push(val)
+  getSheet('Consulta!A2:C', (err, response) => {
+    if (err) {
+      console.error(err)
+      return
     }
+
+    let rows = response.data.values
+    let empresasPlanilha = []
+    let empresasSiare = cnpjsPf.concat(cnpjsPj)
+
+    let faltaPlanilha = []
+    let faltaSiare = []
+
+    faltaPlanilha.push(['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()])
+    faltaSiare.push(['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()])
+
+    rows.forEach(v => {
+      empresasPlanilha.push({
+        nome: v[0],
+        cnpj: v[1],
+        ie: v[2]
+      })
+    })
+
+    empresasPlanilha.forEach(v => {
+      if (empresasSiare.filter(v2 => v2.cnpj === v.cnpj) < 1) {
+        faltaSiare.push([
+          v.nome, v.cnpj, v.ie
+        ])
+      }
+    })
+
+    empresasSiare.forEach(v => {
+      if (empresasPlanilha.filter(v2 => v2.cnpj === v.cnpj) < 1) {
+        faltaPlanilha.push([
+          v.nome, v.cnpj, v.ie
+        ])
+      }
+    })
+
+    writeSheet('Falta na Planilha', faltaPlanilha, (err) => {
+      if (err) {
+        console.error(err)
+      }
+      writeSheet('Falta no Siare', faltaSiare, (err) => {
+        if (err) {
+          console.error(err)
+        }
+        pfWindow.close()
+      })
+    })
   })
-
-  cnpjsTxt.forEach(val => {
-    if (cnpjs.filter(v => v.cnpj === val.cnpj) < 1) {
-      faltaTxt.push(val)
-    }
-  })
-
-  console.log('FALTA NA PLANILHA', faltaCnpjs)
-  console.log('FALTA NO SIARE', faltaTxt)
-
-  pfWindow.close()
 })
 
 let createWindow = () => {
