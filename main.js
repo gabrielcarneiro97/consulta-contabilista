@@ -80,10 +80,11 @@ ipcMain.on('end-pf', () => {
     faltaSiare.push(['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()])
 
     rows.forEach(v => {
+      let [nome, cnpj, ie] = v
       empresasPlanilha.push({
-        nome: v[0],
-        cnpj: v[1],
-        ie: v[2]
+        nome,
+        cnpj,
+        ie
       })
     })
 
