@@ -2,6 +2,7 @@ const electron = require('electron')
 const { ipcMain } = require('electron')
 const fs = require('fs')
 const path = require('path')
+const url = require('url')
 const { login, cpf, senha } = require(path.resolve('./private'))
 const { getSheet, writeSheet } = require(path.resolve('./google-api'))
 
@@ -12,6 +13,7 @@ const BrowserWindow = electron.BrowserWindow
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
+let mainWindow
 let pjWindow
 let pfWindow
 
@@ -118,9 +120,9 @@ ipcMain.on('end-pf', () => {
   })
 })
 
-let createWindow = () => {
+ipcMain.on('init', () => {
   // Create the browser window.
-  pjWindow = new BrowserWindow({width: 800, height: 600})
+  pjWindow = new BrowserWindow({ width: 800, height: 600 })
 
   // and load the index.html of the app.
   pjWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR')
@@ -129,12 +131,24 @@ let createWindow = () => {
     pjWindow.webContents.executeJavaScript(fs.readFileSync('./injectionPj.js', 'utf8'))
   })
 
+  mainWindow.close()
+})
+
+let createWindow = () => {
   // Emitted when the window is closed.
-  pjWindow.on('closed', function () {
+  mainWindow = new BrowserWindow({width: 400, height: 400})
+
+  mainWindow.loadURL(url.format({
+    pathname: path.join(__dirname, 'index.html'),
+    protocol: 'file:',
+    slashes: true
+  }))
+
+  mainWindow.on('closed', function () {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    pjWindow = null
+    mainWindow = null
   })
 }
 
