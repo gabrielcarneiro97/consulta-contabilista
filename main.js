@@ -58,7 +58,7 @@ ipcMain.on('end-pj', () => {
   pfWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR')
 
   pfWindow.webContents.on('did-finish-load', () => {
-    pfWindow.webContents.executeJavaScript(fs.readFileSync('./injectionPf.js', 'utf8'))
+    pfWindow.webContents.executeJavaScript(fs.readFileSync(path.resolve(__dirname, 'injectionPf.js'), 'utf8'))
   })
 
   pjWindow.close()
@@ -128,7 +128,7 @@ ipcMain.on('init', () => {
   pjWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR')
 
   pjWindow.webContents.on('did-finish-load', () => {
-    pjWindow.webContents.executeJavaScript(fs.readFileSync('./injectionPj.js', 'utf8'))
+    pjWindow.webContents.executeJavaScript(fs.readFileSync(path.resolve(__dirname, 'injectionPj.js'), 'utf8'))
   })
 
   mainWindow.close()

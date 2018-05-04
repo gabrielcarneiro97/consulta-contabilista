@@ -1,14 +1,14 @@
 const fs = require('fs')
 const readline = require('readline')
 const google = require('googleapis')
+const path = require('path')
 let { OAuth2Client } = require('google-auth-library')
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-  process.env.USERPROFILE) + '/.credentials/'
-const TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs.json'
+const TOKEN_DIR = path.resolve(__dirname, '.credentials/')
+const TOKEN_PATH = path.resolve(TOKEN_DIR, 'sheets.googleapis.com-nodejs.json')
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -19,7 +19,7 @@ const TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs.json'
  */
 function authorize (callback) {
   // Load client secrets from a local file.
-  fs.readFile('client_secret.json', (err, content) => {
+  fs.readFile(path.resolve(__dirname, 'client_secret.json'), (err, content) => {
     if (err) {
       console.log('Error loading client secret file: ' + err)
       return
