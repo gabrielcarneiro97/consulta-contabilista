@@ -3,8 +3,8 @@ const { ipcMain } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const url = require('url')
-const { login, cpf, senha } = require(path.resolve('./private'))
-const { getSheet, writeSheet } = require(path.resolve('./google-api'))
+const { login, cpf, senha } = require('./private')
+const { getSheet, writeSheet } = require('./google-api')
 
 // Module to control application life.
 const app = electron.app
