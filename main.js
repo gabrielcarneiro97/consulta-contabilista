@@ -136,7 +136,8 @@ ipcMain.on('init', () => {
 
 let createWindow = () => {
   // Emitted when the window is closed.
-  mainWindow = new BrowserWindow({width: 400, height: 400})
+  mainWindow = new BrowserWindow({width: 300, height: 170, resizable: false, minimizable: false})
+  mainWindow.setMenu(null)
 
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
