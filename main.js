@@ -101,7 +101,7 @@ ipcMain.on('end-pf', () => {
     empresasSiare.forEach(v => {
       if (empresasPlanilha.filter(v2 => v2.cnpj === v.cnpj) < 1) {
         faltaPlanilha.push([
-          v.nome, v.cnpj, v.ie
+          v.nome, v.cnpj, v.ie, v.from
         ])
       }
     })

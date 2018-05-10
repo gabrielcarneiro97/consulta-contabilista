@@ -41,7 +41,7 @@ ipcRenderer.on('consulta', (e, m) => {
           let cnpj = tb.rows[i].cells[2].innerText
           let ie = tb.rows[i].cells[1].innerText
           let nome = tb.rows[i].cells[3].innerText
-          arr.push({ cnpj, ie, nome })
+          arr.push({ cnpj, ie, nome, from: 'Pessoa Física' })
         }
         console.log(arr)
         document.formTela.ufw_posicao_grid.value = (parseInt(document.formTela.ufw_posicao_grid.value) + 10).toString()
