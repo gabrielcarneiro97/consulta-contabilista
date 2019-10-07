@@ -1,0 +1,9 @@
+{
+  "loginSelectors": {
+    "tipoSelect": "[name=cmbDominio]",
+    "cpfInput": "[name=login]",
+    "cnpjInput": "[name=dominio]",
+    "senhaInput": "[name=senhaAtual]",
+    "LoginBtn": "[name=Entrar]"
+  }
+}

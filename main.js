@@ -1,124 +1,119 @@
-const electron = require('electron')
-const { ipcMain } = require('electron')
-const fs = require('fs')
-const path = require('path')
-const url = require('url')
-const { login, cpf, senha } = require('./private')
-const { getSheet, writeSheet } = require('./google-api')
+const { ipcMain, app, BrowserWindow } = require('electron');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
+const { login, cpf, senha } = require('./private');
+const { getSheet, writeSheet } = require('./google-api');
 
-// Module to control application life.
-const app = electron.app
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
-let pjWindow
-let pfWindow
+let mainWindow;
+let pjWindow;
+let pfWindow;
 
-let __url
+let __url;
 
-let primeiroPj = true
-let primeiroPf = true
+let primeiroPj = true;
+let primeiroPf = true;
 
-let cnpjsPj = []
-let cnpjsPf = []
+let cnpjsPj = [];
+let cnpjsPf = [];
 
 ipcMain.on('url-pj', (e, m) => {
-  __url = m
-  console.log('pj:', __url)
-  e.sender.send('consulta', {primeiro: primeiroPj, naPj: true, login, senha, cpf})
-})
+  __url = m;
+  console.log('pj:', __url);
+  e.sender.send('consulta', { primeiro: primeiroPj, naPj: true, login, senha, cpf });
+});
 
 ipcMain.on('url-pf', (e, m) => {
-  __url = m
-  console.log('pf:', __url)
-  e.sender.send('consulta', {primeiro: primeiroPf, naPj: false, login, senha, cpf})
-})
+  __url = m;
+  console.log('pf:', __url);
+  e.sender.send('consulta', { primeiro: primeiroPf, naPj: false, login, senha, cpf });
+});
 
 ipcMain.on('primeiro-pj', () => {
-  primeiroPj = false
-})
+  primeiroPj = false;
+});
 
 ipcMain.on('primeiro-pf', () => {
-  primeiroPf = false
-})
+  primeiroPf = false;
+});
 
 ipcMain.on('data_array-pj', (e, arr) => {
-  cnpjsPj = cnpjsPj.concat(arr)
-})
+  cnpjsPj = cnpjsPj.concat(arr);
+});
 
 ipcMain.on('data_array-pf', (e, arr) => {
-  cnpjsPf = cnpjsPf.concat(arr)
-})
+  cnpjsPf = cnpjsPf.concat(arr);
+});
 
 ipcMain.on('end-pj', () => {
   pfWindow = new BrowserWindow({ width: 800, height: 600 })
-  pfWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR')
+  pfWindow.loadURL('https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/GERAL/INICIAL_INTERNET?ACAO=VISUALIZAR');
 
   pfWindow.webContents.on('did-finish-load', () => {
-    pfWindow.webContents.executeJavaScript(fs.readFileSync(path.resolve(__dirname, 'injectionPf.js'), 'utf8'))
-  })
+    pfWindow.webContents.executeJavaScript(fs.readFileSync(path.resolve(__dirname, 'injectionPf.js'), 'utf8'));
+  });
 
-  pjWindow.close()
-})
+  pjWindow.close();
+});
 
 ipcMain.on('end-pf', () => {
   getSheet('Consulta!A2:C', (err, response) => {
     if (err) {
-      console.error(err)
-      return
+      console.error(err);
+      return;
     }
 
-    let rows = response.data.values
-    let empresasPlanilha = []
-    let empresasSiare = cnpjsPf.concat(cnpjsPj)
+    const rows = response.data.values;
+    const empresasPlanilha = [];
+    const empresasSiare = cnpjsPf.concat(cnpjsPj);
 
-    let faltaPlanilha = []
-    let faltaSiare = []
+    const faltaPlanilha = [];
+    const faltaSiare = [];
 
-    faltaPlanilha.push(['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()])
-    faltaSiare.push(['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()])
+    faltaPlanilha.push(['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()]);
+    faltaSiare.push(['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()]);
 
-    rows.forEach(v => {
-      let [nome, cnpj, ie] = v
+    rows.forEach((v) => {
+      const [nome, cnpj, ie] = v;
       empresasPlanilha.push({
         nome,
         cnpj,
-        ie
-      })
-    })
+        ie,
+      });
+    });
 
-    empresasPlanilha.forEach(v => {
-      if (empresasSiare.filter(v2 => v2.cnpj === v.cnpj) < 1) {
+    empresasPlanilha.forEach((v) => {
+      if (empresasSiare.filter((v2) => v2.cnpj === v.cnpj) < 1) {
         faltaSiare.push([
-          v.nome, v.cnpj, v.ie
-        ])
+          v.nome, v.cnpj, v.ie,
+        ]);
       }
-    })
+    });
 
     empresasSiare.forEach(v => {
       if (empresasPlanilha.filter(v2 => v2.cnpj === v.cnpj) < 1) {
         faltaPlanilha.push([
-          v.nome, v.cnpj, v.ie, v.from
-        ])
+          v.nome, v.cnpj, v.ie, v.from,
+        ]);
       }
-    })
+    });
 
     writeSheet('Falta na Planilha', faltaPlanilha, (err) => {
       if (err) {
-        console.error(err)
+        console.error(err);
       }
       writeSheet('Falta no Siare', faltaSiare, (err) => {
         if (err) {
-          console.error(err)
+          console.error(err);
         }
-        pfWindow.close()
-      })
-    })
-  })
-})
+        pfWindow.close();
+      });
+    });
+  });
+});
 
 ipcMain.on('init', () => {
   // Create the browser window.
