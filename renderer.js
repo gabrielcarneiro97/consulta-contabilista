@@ -1,6 +1,6 @@
-const { ipcRenderer } = require('electron')
+const { ipcRenderer } = require('electron');
 
 document.getElementById('btn').onclick = () => {
-  document.getElementById('btn').disabled = true
-  ipcRenderer.send('init')
-}
+  document.getElementById('btn').disabled = true;
+  ipcRenderer.send('init');
+};

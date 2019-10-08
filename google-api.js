@@ -1,47 +1,31 @@
-const fs = require('fs')
-const readline = require('readline')
-const google = require('googleapis')
-const path = require('path')
-let { OAuth2Client } = require('google-auth-library')
+const fs = require('fs');
+const readline = require('readline');
+const google = require('googleapis');
+const path = require('path');
+const { OAuth2Client } = require('google-auth-library');
+const { spreadsheetId } = require('./sheet.json');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/sheets.googleapis.com-nodejs-quickstart.json
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-const TOKEN_DIR = path.resolve(__dirname, '.credentials/')
-const TOKEN_PATH = path.resolve(TOKEN_DIR, 'sheets.googleapis.com-nodejs.json')
+const SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+const TOKEN_DIR = path.resolve(__dirname, '.credentials/');
+const TOKEN_PATH = path.resolve(TOKEN_DIR, 'sheets.googleapis.com-nodejs.json');
 
 /**
- * Create an OAuth2 client with the given credentials, and then execute the
- * given callback function.
+ * Store token to disk be used in later program executions.
  *
- * @param {Object} credentials The authorization client credentials.
- * @param {function} callback The callback to call with the authorized client.
+ * @param {Object} token The token to store to disk.
  */
-function authorize (callback) {
-  // Load client secrets from a local file.
-  fs.readFile(path.resolve(__dirname, 'client_secret.json'), (err, content) => {
-    if (err) {
-      console.log('Error loading client secret file: ' + err)
-      return
+function storeToken(token) {
+  try {
+    fs.mkdirSync(TOKEN_DIR);
+  } catch (err) {
+    if (err.code !== 'EEXIST') {
+      throw err;
     }
-    let credentials = JSON.parse(content)
-    let clientSecret = credentials.installed.client_secret
-    let clientId = credentials.installed.client_id
-    let redirectUrl = credentials.installed.redirect_uris[0]
-    let oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUrl)
-
-    // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, (err, token) => {
-      if (err) {
-        getNewToken(oauth2Client, callback)
-      } else {
-        oauth2Client.credentials = JSON.parse(token)
-        callback(oauth2Client)
-      }
-    })
-    // Authorize a client with the loaded credentials, then call the
-    // Google Sheets API.
-  })
+  }
+  fs.writeFileSync(TOKEN_PATH, JSON.stringify(token));
+  console.log('Token stored to', TOKEN_PATH);
 }
 
 /**
@@ -52,69 +36,86 @@ function authorize (callback) {
  * @param {getEventsCallback} callback The callback to call with the authorized
  *     client.
  */
-function getNewToken (oauth2Client, callback) {
-  let authUrl = oauth2Client.generateAuthUrl({
+function getNewToken(oauth2Client, callback) {
+  const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: SCOPES
-  })
-  console.log('Authorize this app by visiting this url: ', authUrl)
-  let rl = readline.createInterface({
+    scope: SCOPES,
+  });
+  console.log('Authorize this app by visiting this url: ', authUrl);
+  const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
-  })
-  rl.question('Enter the code from that page here: ', function (code) {
-    rl.close()
+    output: process.stdout,
+  });
+  rl.question('Enter the code from that page here: ', (code) => {
+    rl.close();
     oauth2Client.getToken(code, (err, token) => {
       if (err) {
-        console.log('Error while trying to retrieve access token', err)
-        return
+        console.log('Error while trying to retrieve access token', err);
+        return;
       }
-      oauth2Client.credentials = token
-      storeToken(token)
-      callback(oauth2Client)
-    })
-  })
+      oauth2Client.credentials = token; // eslint-disable-line
+      storeToken(token);
+      callback(oauth2Client);
+    });
+  });
 }
 
 /**
- * Store token to disk be used in later program executions.
+ * Create an OAuth2 client with the given credentials, and then execute the
+ * given callback function.
  *
- * @param {Object} token The token to store to disk.
+ * @param {Object} credentials The authorization client credentials.
+ * @param {function} callback The callback to call with the authorized client.
  */
-function storeToken (token) {
-  try {
-    fs.mkdirSync(TOKEN_DIR)
-  } catch (err) {
-    if (err.code !== 'EEXIST') {
-      throw err
+function authorize(callback) {
+  // Load client secrets from a local file.
+  fs.readFile(path.resolve(__dirname, 'client_secret.json'), (err, content) => {
+    if (err) {
+      console.log('Error loading client secret file:', err);
+      return;
     }
-  }
-  fs.writeFileSync(TOKEN_PATH, JSON.stringify(token))
-  console.log('Token stored to ' + TOKEN_PATH)
+    const credentials = JSON.parse(content);
+    const clientSecret = credentials.installed.client_secret;
+    const clientId = credentials.installed.client_id;
+    const redirectUrl = credentials.installed.redirect_uris[0];
+    const oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUrl);
+
+    // Check if we have previously stored a token.
+    fs.readFile(TOKEN_PATH, (errFile, token) => {
+      if (errFile) {
+        getNewToken(oauth2Client, callback);
+      } else {
+        oauth2Client.credentials = JSON.parse(token);
+        callback(oauth2Client);
+      }
+    });
+    // Authorize a client with the loaded credentials, then call the
+    // Google Sheets API.
+  });
 }
 
-exports.getSheet = (range, callback) => {
-  authorize(auth => {
-    let sheets = new google.GoogleApis().sheets('v4')
+exports.getSheet = (range) => new Promise((resolve, reject) => {
+  authorize((auth) => {
+    const sheets = new google.GoogleApis().sheets('v4');
     sheets.spreadsheets.values.get({
       auth,
       range,
-      spreadsheetId: '1lGeXmRvSwXnZJGLYJWrCSfh0IYBbiR3ib_rYKY8HIbY'
-    }, callback)
-  })
-}
+      spreadsheetId,
+    }).then(resolve).catch(reject);
+  });
+});
 
-exports.writeSheet = (range, values, callback) => {
-  authorize(auth => {
-    let sheets = new google.GoogleApis().sheets('v4')
+exports.writeSheet = (range, values) => new Promise((resolve, reject) => {
+  authorize((auth) => {
+    const sheets = new google.GoogleApis().sheets('v4');
     sheets.spreadsheets.values.update({
       auth,
       range,
       valueInputOption: 'RAW',
       resource: {
-        values
+        values,
       },
-      spreadsheetId: '1lGeXmRvSwXnZJGLYJWrCSfh0IYBbiR3ib_rYKY8HIbY'
-    }).then(val => callback(null, val)).catch(err => callback(err))
-  })
-}
+      spreadsheetId,
+    }).then(resolve).catch(reject);
+  });
+});

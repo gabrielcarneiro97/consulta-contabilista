@@ -122,7 +122,7 @@ async function executaConsulta(page) {
 
 async function start(credenciais) {
   const browser = await setBrowser();
-  const page = setPage(browser);
+  const page = await setPage(browser);
 
   await login(page, credenciais);
 

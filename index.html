@@ -17,15 +17,33 @@
       text-decoration: none;
       display: inline-block;
       font-size: 16px;
+      transition-duration: .5s;
+      cursor: pointer;
+    }
+    #btn:hover {
+      background-color: rgb(2, 96, 128);
+    }
+    #btn:disabled {
+      cursor: default;
+      background-color: gray;
     }
   </style>
   <div style="text-align: center">
     <h3>CONSULTA CONTABILISTA SIARE/MG</h3>
-    <button id="btn">INICIAR</button>    
+    <button id="btn">INICIAR</button>
   </div>
 
   <script>
-    require('./renderer.js')
+    const { ipcRenderer } = require('electron');
+
+    document.getElementById('btn').onclick = () => {
+      document.getElementById('btn').disabled = true;
+      ipcRenderer.send('init');
+    };
+
+    ipcRenderer.on('end', () => {
+      document.getElementById('btn').disabled = false;
+    });
   </script>
 
 </body>

@@ -1,10 +1,12 @@
 {
-  "name": "Consulta_Contabilista_Siare",
-  "version": "1.0.0",
+  "name": "consulta-contabilista-siare",
+  "version": "1.0.1",
   "description": "A minimal Electron application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "postinstall": "electron-builder install-app-deps",
+    "electron-pack": "electron-builder -w --ia32"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
