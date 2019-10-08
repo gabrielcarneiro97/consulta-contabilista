@@ -1,3 +1,5 @@
 {
-  "loginUrl": "https://www2.fazenda.mg.gov.br/sol/"
+  "loginUrl": "https://www2.fazenda.mg.gov.br/sol/",
+  "paginaConsulta1": "https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/IE/CONSULTA_686?ACAO=VISUALIZAR",
+  "paginaConsulta2": "https://www2.fazenda.mg.gov.br/sol/ctrl/SOL/IE/CONSULTA_691"
 }

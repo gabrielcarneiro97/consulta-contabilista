@@ -4,6 +4,12 @@
     "cpfInput": "[name=login]",
     "cnpjInput": "[name=dominio]",
     "senhaInput": "[name=senhaAtual]",
-    "LoginBtn": "[name=Entrar]"
+    "loginBtn": "[name=Entrar]"
+  },
+  "consultaSelectors": {
+    "proximoBtn": "[name=linkProximo]",
+    "consultaLink": "[name=lnkContribuintes]",
+    "pgInput": "[name=ufw_posicionador_grid]",
+    "tabela": "table"
   }
 }
