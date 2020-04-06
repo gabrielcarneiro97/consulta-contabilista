@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron');
 const { start } = require('./puppeteer');
 const { getSheet, writeSheet } = require('./google-api');
-
+const { dataRange, faltaSiareSheet, faltaPlanilhaSheet } = require('./sheet.json');
 
 const {
   credenciaisPf,
@@ -14,7 +14,7 @@ ipcRenderer.on('init', async () => {
 
   const empresasSiare = dadosPj.concat(dadosPf);
 
-  const { data } = await getSheet('Consulta!A2:C');
+  const { data } = await getSheet(dataRange);
   const rows = data.values;
 
   const empresasPlanilha = rows.map((row) => {
@@ -28,34 +28,31 @@ ipcRenderer.on('init', async () => {
 
   const planilhaHeader = ['Nome', 'CNPJ', 'Inscrição Estadual', new Date().toLocaleString()];
 
-  const faltaPlanilha = [
-    planilhaHeader,
-  ];
-  const faltaSiare = [
-    planilhaHeader,
-  ];
-
-  empresasPlanilha.forEach((v) => {
-    if (!empresasSiare.find((v2) => v2.cnpj === v.cnpj)) {
-      faltaSiare.push([
-        v.nome, v.cnpj, v.ie,
-      ]);
+  const faltaPlanilha = empresasSiare.reduce((acc, crr) => {
+    if (!empresasPlanilha.find((val) => val.cnpj === crr.cnpj)) {
+      return [
+        [crr.nome, crr.cnpj, crr.ie],
+        ...acc,
+      ];
     }
-  });
 
-  empresasSiare.forEach((v) => {
-    if (!empresasPlanilha.find((v2) => v2.cnpj === v.cnpj)) {
-      faltaPlanilha.push([
-        v.nome, v.cnpj, v.ie, v.from,
-      ]);
+    return acc;
+  }, [planilhaHeader]);
+
+  const faltaSiare = empresasPlanilha.reduce((acc, crr) => {
+    if (!empresasSiare.find((val) => val.cnpj === crr.cnpj)) {
+      return [
+        [crr.nome, crr.cnpj, crr.ie],
+        ...acc,
+      ];
     }
-  });
 
-  console.log(dadosPj, dadosPf);
+    return acc;
+  }, [planilhaHeader]);
 
   const writeResp = await Promise.all([
-    writeSheet('Falta na Planilha', faltaPlanilha),
-    writeSheet('Falta no Siare', faltaSiare),
+    writeSheet(faltaPlanilhaSheet, faltaPlanilha),
+    writeSheet(faltaSiareSheet, faltaSiare),
   ]);
 
   console.log(writeResp);

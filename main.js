@@ -6,13 +6,11 @@ const reloader = require('electron-reload');
 const { version } = require('./package.json');
 
 reloader(__dirname);
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
+
 let mainWindow;
 let backgroundWindow;
 
 function createWindow() {
-  // Emitted when the window is closed.
   mainWindow = new BrowserWindow({
     width: 300,
     height: 170,
@@ -37,8 +35,6 @@ function createWindow() {
   mainWindow.setTitle(`Consulta Contabilista Siare ${version}`);
 
   if (isDev) {
-    // Open the DevTools.
-    // BrowserWindow.addDevToolsExtension('<location to your react chrome extension>');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
     backgroundWindow.webContents.openDevTools({ mode: 'detach' });
   }
