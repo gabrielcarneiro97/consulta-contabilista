@@ -22,7 +22,7 @@ async function setPage(browser) {
   return page;
 }
 
-async function login(page, creds) {
+async function login(page, credentials) {
   await page.goto(loginUrl, { waitUntil: 'networkidle0' });
 
   await page.evaluate(({
@@ -50,8 +50,9 @@ async function login(page, creds) {
       $(cnpjInput).val(cnpj);
       $(cnpjInput).change();
     }
+
     $(loginBtn).click();
-  }, creds, loginSelectors);
+  }, credentials, loginSelectors);
 }
 
 async function extrairNumPaginas(page) {
@@ -106,11 +107,13 @@ async function executaConsulta(page) {
       const tbEl = document.getElementsByTagName(tabela)[3];
       const data = [];
       for (let i = 1; i < tbEl.rows.length - 1; i += 1) {
-        const cnpj = tbEl.rows[i].cells[2].innerText;
-        const ie = tbEl.rows[i].cells[1].innerText;
-        const nome = tbEl.rows[i].cells[3].innerText;
+        const el = tbEl.rows[i];
+        const ie = el.cells[1].innerText;
+        const cnpj = el.cells[2].innerText;
+        const nome = el.cells[3].innerText;
         data.push({ cnpj, ie, nome });
       }
+
       return data;
     }, consultaSelectors);
     dataArr.push(pageData);
