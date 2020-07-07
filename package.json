@@ -8,7 +8,7 @@
     "electron-pack": "electron-builder -w --ia32"
   },
   "devDependencies": {
-    "electron": "^6.0.11",
+    "electron": "^7.2.4",
     "electron-builder": "^21.2.0",
     "eslint": "^6.5.1",
     "eslint-config-airbnb-base": "^14.0.0",
