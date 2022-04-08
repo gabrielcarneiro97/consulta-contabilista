@@ -2,6 +2,7 @@
 *private.js
 /release-builds
 /.credentials
+/.idea
 /dist
 
 # Logs
